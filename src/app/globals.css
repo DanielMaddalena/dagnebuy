@@ -23,3 +23,7 @@
     text-wrap: balance;
   }
 }
+
+button:disabled {
+  @apply cursor-not-allowed opacity-60;
+}

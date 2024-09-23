@@ -26,11 +26,11 @@ const CounterComponent = ({ stockLevel }) => {
   return (
     <div className="flex flex-col items-start">
       {stockLevel !== null ? (
-        <p className="text-[1.75rem]">Disponibilità: {stockLevel}</p>
+        <p className="text-[0.875rem]">Disponibilità: {stockLevel}</p>
       ) : (
-        <p className="text-[1.75rem]">Seleziona una variante per vedere la disponibilità</p>
+        <p className="text-[0.875rem]">Seleziona le opzioni per vedere la disponibilità</p>
       )}
-      <div className="flex flex-wrap items-center space-x-5 text-[2.5rem] leading-none font-sans font-light mt-2">
+      <div className="flex flex-wrap items-center space-x-5 text-[2.5rem] leading-none font-sans font-light mt-3">
         <button
           className="inline-flex items-center"
           disabled={contatore <= 1}

@@ -8,20 +8,19 @@ import useSwell from '@/contexts/useSwell'
 import Image from 'next/image';
 import Link from 'next/link'
 
-/* devo specificare che product è del tipo Product perchè siamo passati da un componente all'altro,
-in questo modo typescript capisce
-*/
-
 export default function ProductDetail({ product }: { product: Product }) {
   const { addVariant, getCart } = useSwell();
   const [selectedOptions, setSelectedOptions] = useState({});
   const [variants, setVariants] = useState(product.variants.results || []);
   const [stockLevel, setStockLevel] = useState(null);
+  const [isBuyButtonDisabled, setIsBuyButtonDisabled] = useState(true);
 
   // Funzione per ottenere il livello di stock della variante selezionata
-
   const getSelectedVariantStockLevel = useCallback(() => {
-    // Trova la variante che corrisponde a tutte le opzioni selezionate
+    if (Object.keys(selectedOptions).length !== product.options.length) {
+      return null;
+    }
+
     const selectedVariant = variants.find(variant => {
       const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
         const optionName = product.options[index].name;
@@ -29,32 +28,31 @@ export default function ProductDetail({ product }: { product: Product }) {
         return acc;
       }, {});
 
-      // Verifica se tutte le opzioni selezionate corrispondono alla variante
-      return Object.keys(selectedOptions).every(optionName => 
+      return Object.keys(selectedOptions).every(optionName =>
         variantOptions[optionName] === selectedOptions[optionName]
       );
     });
 
-    // Se esiste una variante selezionata, ritorna il livello di stock
     if (selectedVariant) {
       return selectedVariant.stock_level;
     }
-
-    // Se non c'è una variante corrispondente, ritorna null
     return null;
   }, [selectedOptions, variants, product.options]);
 
-  // Effetto per aggiornare il livello di stock quando le opzioni selezionate cambiano
+  // Effetto per aggiornare il livello di stock e lo stato del pulsante Buy quando le opzioni selezionate cambiano
   useEffect(() => {
     const stockLevel = getSelectedVariantStockLevel();
     setStockLevel(stockLevel);
-  }, [selectedOptions, getSelectedVariantStockLevel]);
+
+    // Verifica se tutte le opzioni sono state selezionate e se c'è un livello di stock disponibile
+    const allOptionsSelected = product.options.length === Object.keys(selectedOptions).length;
+    setIsBuyButtonDisabled(!(allOptionsSelected && stockLevel > 0));
+  }, [selectedOptions, getSelectedVariantStockLevel, product.options]);
 
   const availableOptions = useMemo(() => {
     const newAvailableOptions = {};
-  
+
     product.options.forEach(option => {
-      // Filtra le varianti basandosi sulle opzioni selezionate, escludendo l'opzione corrente
       const filteredVariants = variants.filter(variant => {
         const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
           const optionName = product.options[index].name;
@@ -62,12 +60,11 @@ export default function ProductDetail({ product }: { product: Product }) {
           return acc;
         }, {});
         return Object.keys(selectedOptions).every(selectedOptionName => {
-          if (selectedOptionName === option.name) return true; // Esclude l'opzione corrente
+          if (selectedOptionName === option.name) return true;
           return variantOptions[selectedOptionName] === selectedOptions[selectedOptionName];
         });
       });
-  
-      // Raccoglie i valori disponibili per questa opzione
+
       const availableValues = new Set();
       filteredVariants.forEach(variant => {
         const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
@@ -79,7 +76,7 @@ export default function ProductDetail({ product }: { product: Product }) {
       });
       newAvailableOptions[option.name] = Array.from(availableValues);
     });
-  
+
     return newAvailableOptions;
   }, [selectedOptions, variants]);
 
@@ -122,8 +119,10 @@ export default function ProductDetail({ product }: { product: Product }) {
               </h5>
             )}
             <h5 className='text-[3.125rem] text-center font-sans font-medium text-black leading-none mt-2'>{product.price}</h5>
-            <Link className="mt-16 text-center text-white uppercase leading-none rounded-[0.25rem] bg-violet-100 text-[3.625rem] font-light font-sans py-4 px-6 min-w-[15.875rem]"
-                  onClick={handleAddVariant} href={`/step-5/${product.id}`}>
+            <Link className={`mt-16 text-center text-white uppercase leading-none rounded-[0.25rem] bg-violet-100 text-[3.625rem] font-light font-sans py-4 px-6 min-w-[15.875rem] ${isBuyButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={(e) => { e.preventDefault(); if (!isBuyButtonDisabled) handleAddVariant(); }} 
+                  href={`/step-5/${product.id}`}
+                  disabled={isBuyButtonDisabled}>
                   Buy
             </Link>
             <Link href={`/step-3`} className="inline-flex items-center mt-16 leading-none text-[1.875rem] font-light font-sans">
@@ -152,7 +151,7 @@ export default function ProductDetail({ product }: { product: Product }) {
                   return (
                     <button
                       key={idx}
-                      className={`first-letter:uppercase text-[1.75rem] leading-none font-sans font-light mt-2 mr-7 ${isSelected ? 'text-violet-100 font-bold' : ''} ${!isAvailable ? 'text-gray-400' : ''}`}
+                      className={`first-letter:uppercase text-[1.75rem] leading-none font-sans font-light mt-2 mr-7 hover:text-violet-100 ${isSelected ? 'text-violet-100  font-bold' : ''} ${!isAvailable ? 'text-gray-400' : ''}`}
                       onClick={() => handleOptionClick(option.name, value.name)}
                       disabled={!isAvailable}
                     >
