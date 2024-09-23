@@ -16,40 +16,39 @@ export default function ProductDetail({ product }: { product: Product }) {
   const { addVariant, getCart } = useSwell();
   const [selectedOptions, setSelectedOptions] = useState({});
   const [variants, setVariants] = useState(product.variants.results || []);
-
+  const [stockLevel, setStockLevel] = useState(null);
 
   // Funzione per ottenere il livello di stock della variante selezionata
-const getSelectedVariantStockLevel = useCallback(() => {
-  // Trova la variante che corrisponde a tutte le opzioni selezionate
-  const selectedVariant = variants.find(variant => {
-    const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
-      const optionName = product.options[index].name;
-      acc[optionName] = value;
-      return acc;
-    }, {});
-    
-    // Verifica se tutte le opzioni selezionate corrispondono alla variante
-    return Object.keys(selectedOptions).every(optionName => 
-      variantOptions[optionName] === selectedOptions[optionName]
-    );
-  });
 
-  // Se esiste una variante selezionata, ritorna il livello di stock
-  if (selectedVariant) {
-    return selectedVariant.stock_level;
-  }
-  
-  // Se non c'è una variante corrispondente, ritorna null
-  return null;
-}, [selectedOptions, variants, product.options]);
+  const getSelectedVariantStockLevel = useCallback(() => {
+    // Trova la variante che corrisponde a tutte le opzioni selezionate
+    const selectedVariant = variants.find(variant => {
+      const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
+        const optionName = product.options[index].name;
+        acc[optionName] = value;
+        return acc;
+      }, {});
 
-// Effetto per loggare il livello di stock della variante selezionata
-useEffect(() => {
-  const stockLevel = getSelectedVariantStockLevel();
-  if (stockLevel !== null) {
-    console.log(`Stock disponibile per la variante selezionata: ${stockLevel}`);
-  }
-}, [selectedOptions, getSelectedVariantStockLevel]);
+      // Verifica se tutte le opzioni selezionate corrispondono alla variante
+      return Object.keys(selectedOptions).every(optionName => 
+        variantOptions[optionName] === selectedOptions[optionName]
+      );
+    });
+
+    // Se esiste una variante selezionata, ritorna il livello di stock
+    if (selectedVariant) {
+      return selectedVariant.stock_level;
+    }
+
+    // Se non c'è una variante corrispondente, ritorna null
+    return null;
+  }, [selectedOptions, variants, product.options]);
+
+  // Effetto per aggiornare il livello di stock quando le opzioni selezionate cambiano
+  useEffect(() => {
+    const stockLevel = getSelectedVariantStockLevel();
+    setStockLevel(stockLevel);
+  }, [selectedOptions, getSelectedVariantStockLevel]);
 
   const availableOptions = useMemo(() => {
     const newAvailableOptions = {};
@@ -165,7 +164,7 @@ useEffect(() => {
             </div>
           ))}
             <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mt-8 mb-4'>Quantity</p>
-            <CounterComponent/>
+            <CounterComponent stockLevel={stockLevel}/>
         </div>
       </div>
     </div>
