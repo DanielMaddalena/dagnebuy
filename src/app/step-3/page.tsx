@@ -23,7 +23,6 @@ export default function page() {
   useEffect(() => {
     getData();
   }, [getData]);
-  console.log(products)
 
   return (
       <div className='w-full h-screen flex flex-col py-8 px-4'>

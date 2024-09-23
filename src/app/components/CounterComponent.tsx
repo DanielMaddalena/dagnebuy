@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 const CounterComponent = () => {
-  const [contatore,setContatore] =useState(0);
+  const [contatore,setContatore] =useState(1);
 
   const aumenta = () => {
     setContatore((oldValue) => {
@@ -11,7 +11,7 @@ const CounterComponent = () => {
   }
   const diminuisci = () => {
     setContatore((oldValue) => {
-        if(oldValue - 1 === -1 ) {
+        if(oldValue - 1 === 0 ) {
             return oldValue;
         }
         return oldValue - 1;
@@ -23,7 +23,7 @@ const CounterComponent = () => {
         <button className="inline-flex items-center" onClick={diminuisci}>
           -
         </button>
-        <h3 className="text-[3.25rem]">{contatore}</h3>
+        <h3 className="text-[1.75rem]">{contatore}</h3>
         <button className="inline-flex items-center" onClick={aumenta}>
           +
         </button>

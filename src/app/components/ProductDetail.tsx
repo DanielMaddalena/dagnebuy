@@ -1,9 +1,10 @@
 'use client'
-import React, { useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import CounterComponent from './CounterComponent'
 import { Product } from '@chec/commerce.js/types/product'
 // import { useCart } from '@/contexts/useCart'
 import useCommerce from '@/contexts/useCommerce'
+import useSwell from '@/contexts/useSwell'
 import Image from 'next/image';
 import Link from 'next/link'
 
@@ -12,37 +13,51 @@ in questo modo typescript capisce
 */
 
 export default function ProductDetail({ product }: { product: Product }) {
-  // const { setItems } = useCart()
+  const { addVariant, getCart } = useSwell();
+   
+  const [selectedOptions, setSelectedOptions] = useState({});
 
-  // const addToCart = useCallback(() => {
-  //   setItems(prev => [...prev, product])
-  // }, [product])
-  const { addToCart } = useCommerce(); // Usa l'hook useCommerce qui
+  // Funzione per gestire il click sul bottone dell'opzione
+  const handleOptionClick = (optionName, valueName) => {
+    setSelectedOptions((prevSelectedOptions) => ({
+      ...prevSelectedOptions,
+      [optionName]: valueName,
+    }));
+  };
 
-  // Qui utilizziamo addToCart da useCommerce per aggiungere al carrello di Commerce.js
-  const handleAddToCart = useCallback(async () => {
-    // Assumi che CounterComponent fornisca la quantità selezionata. 
-    // Dovresti avere un modo per ottenere questa quantità dal componente CounterComponent.
-    const quantity = 1; // Questo è un placeholder, sostituiscilo con il valore reale
-    await addToCart(product.id, quantity);
-    // Aggiungi qui eventuali azioni post-aggiunta, come un feedback visivo
-  }, [product, addToCart]);
+  const handleViewCart = async () => {
+    try {
+      const cart = await getCart();
+      console.log('Carrello:', cart);
+    } catch (error) {
+      console.error('Errore nel recupero del carrello:', error);
+    }
+  };
+  const handleAddVariant = async () => {
+    try {
+      const updatedCart = await addVariant('5c15505200c7d14d851e510f', 1, '5c15512e55f3l04q047b480g');
+      console.log('Carrello aggiornato:', updatedCart);
+    } catch (error) {
+      console.error('Errore nell\'aggiunta della variante al carrello:', error);
+    }
+  };
 
   return (
     <div className='w-full h-screen flex flex-col p-8 !overflow-x-visible'>
       <h1 className='uppercase text-[4.5rem] leading-none font-sans font-light text-black text-center'>Product Details</h1>
       <div className="mt-16 grid grid-cols-2 gap-4 w-full !overflow-x-visible">
         <div className="flex flex-col items-center">
-            {product.image && (
-              <Image src={product.image?.url ?? ''} className="h-auto w-full object-contain" alt="t-shirt" priority width={500} height={500} />
+            {product.images && product.images.length > 0 && (
+              <Image src={product.images[0]?.file?.url ?? ''} className="mb-10 h-auto w-full object-contain" alt="t-shirt" priority width={500} height={500} />
             )}
-            <h5 className='mt-5 relative p-1 overflow-hidden text-[1.75rem] text-center font-sans font-medium text-black leading-none'>
-                $19.90
-                <span className='w-full scale-125 block h-[0.0625rem] bg-violet-100 rotate-[-10deg] absolute top-1/2 -translate-y-1/2'></span>
-            </h5>
-            <h5 className='text-[3.125rem] text-center font-sans font-medium text-black leading-none mt-2'>{product.price?.formatted_with_symbol}</h5>
+            { product.orig_price && (<h5 className='relative p-1 overflow-hidden text-[1.75rem] text-center font-sans font-medium text-black leading-none'>
+                  {product.orig_price}
+                  <span className='w-full scale-125 block h-[0.0625rem] bg-violet-100 rotate-[-10deg] absolute top-1/2 -translate-y-1/2'></span>
+              </h5>
+            )}
+            <h5 className='text-[3.125rem] text-center font-sans font-medium text-black leading-none mt-2'>{product.price}</h5>
             <Link className="mt-16 text-center text-white uppercase leading-none rounded-[0.25rem] bg-violet-100 text-[3.625rem] font-light font-sans py-4 px-6 min-w-[15.875rem]"
-                  onClick={handleAddToCart} href={`/step-5/${product.id}`}>
+                  onClick={handleAddVariant} href={`/step-5/${product.id}`}>
                   Buy
             </Link>
             <Link href={`/step-3`} className="inline-flex items-center mt-16 leading-none text-[1.875rem] font-light font-sans">
@@ -51,34 +66,32 @@ export default function ProductDetail({ product }: { product: Product }) {
                 src="/images/double-arrows-down.svg"
                 alt="search"
                 />
-                <span>Back to catalogue</span>
+                <span onClick={handleViewCart}>Back to catalogue</span>
             </Link>
         </div>
         <div className="flex flex-col !overflow-x-visible">
+          {console.log(product)}
             <h3 className='text-[2.25rem] leading-none font-sans font-bold text-black'>{product.name}</h3>
-            <p className='text-[1.8125rem] leading-none font-sans font-light text-black mt-4' dangerouslySetInnerHTML={{ __html: product.description }}></p>
-            <img
-            className="h-auto w-12 object-contain my-4"
-            src="/images/double-arrows-down.svg"
-            alt="search"
-            /> 
-            <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mb-2'>Select size</p>
-            <div className="flex flex-wrap">
-                <p className='uppercase text-[3.125rem] leading-none font-sans font-light text-black mt-2 mr-7'>Xs</p>
-                <p className='uppercase text-[3.125rem] leading-none font-sans font-light text-black mt-2 mr-7'>s</p>
-                <p className='uppercase text-[3.125rem] leading-none font-sans font-light text-black mt-2 mr-7'>m</p>
-                <p className='uppercase text-[3.125rem] leading-none font-sans font-light text-black mt-2 mr-7'>l</p>
-                <p className='uppercase text-[3.125rem] leading-none font-sans font-light text-black mt-2 mr-7'>Xl</p>
-                <p className='uppercase text-[3.125rem] leading-none font-sans font-light text-black mt-2 mr-6'>Xxl</p>
-            </div>
-            <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mt-8'>Select color</p>
-            <div className="flex overflow-x-scroll w-full mt-4">
-                <div className='flex-shrink-0 mr-6 !h-[5.5rem] !w-[5.5rem] bg-slate-200'></div>
-                <div className='flex-shrink-0 mr-6 !h-[5.5rem] !w-[5.5rem] bg-slate-200'></div>
-                <div className='flex-shrink-0 mr-6 !h-[5.5rem] !w-[5.5rem] bg-slate-200'></div>
-                <div className='flex-shrink-0 mr-6 !h-[5.5rem] !w-[5.5rem] bg-slate-200'></div>
-                <div className='flex-shrink-0 mr-6 !h-[5.5rem] !w-[5.5rem] bg-slate-200'></div>
-            </div>
+            <p className='text-[1.8125rem] leading-none font-sans font-light text-black mt-4 mb-10' dangerouslySetInnerHTML={{ __html: product.description }}></p>
+            {/* Itera su tutte le varianti */}
+            {product.options && product.options.map((option, index) => (
+              <div key={index} className="mt-4">
+                <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mb-3 mt-6'>
+                  {option.name}
+                </p>
+                <div className="flex flex-wrap">
+                  {option.values.map((value, idx) => (
+                    <button
+                      key={idx}
+                      className={`first-letter:uppercase text-[1.75rem] leading-none font-sans font-light mt-2 mr-7 ${selectedOptions[option.name] === value.name ? 'text-violet-100 font-bold' : ''}`}
+                      onClick={() => handleOptionClick(option.name, value.name)}
+                    >
+                      {value.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
             <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mt-8 mb-4'>Quantity</p>
             <CounterComponent/>
         </div>

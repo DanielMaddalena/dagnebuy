@@ -30,9 +30,37 @@ const useSwell = () => {
     }
   }, []);
 
+  // Funzione per ottenere il carrello corrente
+  const getCart = useCallback(async () => {
+    try {
+      const cart = await swell.cart.get();
+      return cart;
+    } catch (error) {
+      console.error('Errore nel recupero del carrello:', error);
+      throw error;
+    }
+  }, []);
+
+  // Funzione per aggiungere un articolo al carrello con una variante
+  const addVariant = useCallback(async (productId: string, quantity: number, variantId: string) => {
+    try {
+      const cart = await swell.cart.addItem({
+        product_id: productId,
+        quantity: quantity,
+        variant_id: variantId
+      });
+      return cart;
+    } catch (error) {
+      console.error('Errore nell\'aggiunta del prodotto al carrello:', error);
+      throw error;
+    }
+  }, []);
+
   return {
     getProduct,
     getProducts,
+    getCart, // Aggiunta della funzione getCart
+    addVariant, // Aggiunta della funzione addVariant
     // Aggiungi altre funzioni qui se necessario
   }
 }
