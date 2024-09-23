@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import CounterComponent from './CounterComponent'
 import { Product } from '@chec/commerce.js/types/product'
 // import { useCart } from '@/contexts/useCart'
@@ -14,8 +14,75 @@ in questo modo typescript capisce
 
 export default function ProductDetail({ product }: { product: Product }) {
   const { addVariant, getCart } = useSwell();
-   
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [variants, setVariants] = useState(product.variants.results || []);
+
+
+  // Funzione per ottenere il livello di stock della variante selezionata
+const getSelectedVariantStockLevel = useCallback(() => {
+  // Trova la variante che corrisponde a tutte le opzioni selezionate
+  const selectedVariant = variants.find(variant => {
+    const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
+      const optionName = product.options[index].name;
+      acc[optionName] = value;
+      return acc;
+    }, {});
+    
+    // Verifica se tutte le opzioni selezionate corrispondono alla variante
+    return Object.keys(selectedOptions).every(optionName => 
+      variantOptions[optionName] === selectedOptions[optionName]
+    );
+  });
+
+  // Se esiste una variante selezionata, ritorna il livello di stock
+  if (selectedVariant) {
+    return selectedVariant.stock_level;
+  }
+  
+  // Se non c'è una variante corrispondente, ritorna null
+  return null;
+}, [selectedOptions, variants, product.options]);
+
+// Effetto per loggare il livello di stock della variante selezionata
+useEffect(() => {
+  const stockLevel = getSelectedVariantStockLevel();
+  if (stockLevel !== null) {
+    console.log(`Stock disponibile per la variante selezionata: ${stockLevel}`);
+  }
+}, [selectedOptions, getSelectedVariantStockLevel]);
+
+  const availableOptions = useMemo(() => {
+    const newAvailableOptions = {};
+  
+    product.options.forEach(option => {
+      // Filtra le varianti basandosi sulle opzioni selezionate, escludendo l'opzione corrente
+      const filteredVariants = variants.filter(variant => {
+        const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
+          const optionName = product.options[index].name;
+          acc[optionName] = value;
+          return acc;
+        }, {});
+        return Object.keys(selectedOptions).every(selectedOptionName => {
+          if (selectedOptionName === option.name) return true; // Esclude l'opzione corrente
+          return variantOptions[selectedOptionName] === selectedOptions[selectedOptionName];
+        });
+      });
+  
+      // Raccoglie i valori disponibili per questa opzione
+      const availableValues = new Set();
+      filteredVariants.forEach(variant => {
+        const variantOptions = variant.name.split(', ').reduce((acc, value, index) => {
+          const optionName = product.options[index].name;
+          acc[optionName] = value;
+          return acc;
+        }, {});
+        availableValues.add(variantOptions[option.name]);
+      });
+      newAvailableOptions[option.name] = Array.from(availableValues);
+    });
+  
+    return newAvailableOptions;
+  }, [selectedOptions, variants]);
 
   // Funzione per gestire il click sul bottone dell'opzione
   const handleOptionClick = (optionName, valueName) => {
@@ -75,23 +142,28 @@ export default function ProductDetail({ product }: { product: Product }) {
             <p className='text-[1.8125rem] leading-none font-sans font-light text-black mt-4 mb-10' dangerouslySetInnerHTML={{ __html: product.description }}></p>
             {/* Itera su tutte le varianti */}
             {product.options && product.options.map((option, index) => (
-              <div key={index} className="mt-4">
-                <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mb-3 mt-6'>
-                  {option.name}
-                </p>
-                <div className="flex flex-wrap">
-                  {option.values.map((value, idx) => (
+            <div key={index} className="mt-4">
+              <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mb-3 mt-6'>
+                {option.name}
+              </p>
+              <div className="flex flex-wrap">
+                {option.values.map((value, idx) => {
+                  const isSelected = selectedOptions[option.name] === value.name;
+                  const isAvailable = availableOptions[option.name]?.includes(value.name);
+                  return (
                     <button
                       key={idx}
-                      className={`first-letter:uppercase text-[1.75rem] leading-none font-sans font-light mt-2 mr-7 ${selectedOptions[option.name] === value.name ? 'text-violet-100 font-bold' : ''}`}
+                      className={`first-letter:uppercase text-[1.75rem] leading-none font-sans font-light mt-2 mr-7 ${isSelected ? 'text-violet-100 font-bold' : ''} ${!isAvailable ? 'text-gray-400' : ''}`}
                       onClick={() => handleOptionClick(option.name, value.name)}
+                      disabled={!isAvailable}
                     >
                       {value.name}
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            ))}
+            </div>
+          ))}
             <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mt-8 mb-4'>Quantity</p>
             <CounterComponent/>
         </div>
