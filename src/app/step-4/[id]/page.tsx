@@ -19,6 +19,7 @@ export default function page({ params }: { params: { id: string } }) {
   /* Con lo use uffect non possiamo usare una funziona asincrona perchè va in errore, quindi creiamo getData 
   fuori.
   */
+ 
   useEffect(() => {
     getData()
   }, [])

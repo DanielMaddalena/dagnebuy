@@ -95,7 +95,6 @@ export default function ProductDetail({ product }: { product: Product }) {
   const handleViewCart = async () => {
     try {
       const cart = await getCart();
-      console.log('Carrello:', cart);
     } catch (error) {
       console.error('Errore nel recupero del carrello:', error);
     }
@@ -162,7 +161,6 @@ export default function ProductDetail({ product }: { product: Product }) {
             </Link>
         </div>
         <div className="flex flex-col !overflow-x-visible">
-          {console.log(product)}
             <h3 className='text-[2.25rem] leading-none font-sans font-bold text-black'>{product.name}</h3>
             <p className='text-[1.8125rem] leading-none font-sans font-light text-black mt-4 mb-10' dangerouslySetInnerHTML={{ __html: product.description }}></p>
             {/* Itera su tutte le varianti */}
