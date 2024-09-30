@@ -1,26 +1,20 @@
 'use client'
-import React, { useState } from "react";
+import React from "react";
 
-const CounterComponent = ({ stockLevel }) => {
-  const [contatore, setContatore] = useState(1);
-
+const CounterComponent = ({ stockLevel, quantity, setQuantity }) => {
   const aumenta = () => {
-    setContatore((oldValue) => {
-      // Controlla se stockLevel è definito e se il contatore è minore dello stock disponibile
-      if (stockLevel !== null && oldValue >= stockLevel) {
-        return oldValue; // Non incrementa se raggiunge lo stock massimo
-      }
-      return oldValue + 1;
-    });
+    // Controlla se stockLevel è definito e se la quantità è minore dello stock disponibile
+    if (stockLevel !== null && quantity >= stockLevel) {
+      return; // Non incrementa se raggiunge lo stock massimo
+    }
+    setQuantity((oldValue) => oldValue + 1);
   };
   
   const diminuisci = () => {
-    setContatore((oldValue) => {
-      if (oldValue - 1 === 0) {
-        return oldValue; // Non decrementa sotto 1
-      }
-      return oldValue - 1;
-    });
+    if (quantity <= 1) {
+      return; // Non decrementa sotto 1
+    }
+    setQuantity((oldValue) => oldValue - 1);
   };
   
   return (
@@ -33,15 +27,15 @@ const CounterComponent = ({ stockLevel }) => {
       <div className="flex flex-wrap items-center space-x-5 text-[2.5rem] leading-none font-sans font-light mt-3">
         <button
           className="inline-flex items-center"
-          disabled={contatore <= 1}
+          disabled={quantity <= 1}
           onClick={diminuisci}
         >
           -
         </button>
-        <h3 className="text-[1.75rem]">{contatore}</h3>
+        <h3 className="text-[1.75rem]">{quantity}</h3>
         <button
           className="inline-flex items-center"
-          disabled={stockLevel === null || contatore >= stockLevel}
+          disabled={stockLevel === null || quantity >= stockLevel}
           onClick={aumenta}
         >
           +
