@@ -67,6 +67,18 @@ const useSwell = () => {
     }
   }, []);
 
+  const updateProduct = useCallback(async (itemId: string, quantity: number) => {
+    try {
+      const cart = await swell.cart.updateItem(itemId, {
+        quantity: quantity,
+      });
+      return cart;
+    } catch (error) {
+      console.error('Errore nell\'aggiornamento del prodotto nel carrello:', error);
+      throw error;
+    }
+  }, []);
+
   // const removeProduct = useCallback(async (item_id: string) => {
   //   return swell.cart.removeItem(item_id)
   // }, [])
@@ -77,6 +89,7 @@ const useSwell = () => {
   
 
   return {
+    updateProduct,
     removeProduct,
     setCurrent,
     getProduct,

@@ -197,7 +197,7 @@ export default function ProductDetail({ product }: { product: Product }) {
             </div>
           ))}
             <p className='text-[2.0625rem] leading-none font-sans font-medium text-black mt-8 mb-4'>Quantity</p>
-            <CounterComponent stockLevel={stockLevel} quantity={quantity} setQuantity={setQuantity} />
+            <CounterComponent  showAvailability={true} stockLevel={stockLevel} quantity={quantity} setQuantity={setQuantity} />
         </div>
       </div>
     </div>

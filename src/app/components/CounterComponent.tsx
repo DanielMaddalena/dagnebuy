@@ -1,7 +1,7 @@
 'use client'
 import React from "react";
 
-const CounterComponent = ({ stockLevel, quantity, setQuantity }) => {
+const CounterComponent = ({ stockLevel, quantity, setQuantity, showAvailability }) => {
   const aumenta = () => {
     // Controlla se stockLevel è definito e se la quantità è minore dello stock disponibile
     if (stockLevel !== null && quantity >= stockLevel) {
@@ -19,10 +19,12 @@ const CounterComponent = ({ stockLevel, quantity, setQuantity }) => {
   
   return (
     <div className="flex flex-col items-start">
-      {stockLevel !== null ? (
-        <p className="text-[0.875rem]">Disponibilità: {stockLevel}</p>
-      ) : (
-        <p className="text-[0.875rem]">Seleziona le opzioni per vedere la disponibilità</p>
+      {showAvailability && (
+        stockLevel !== null ? (
+          <p className="text-[0.875rem]">Disponibilità: {stockLevel}</p>
+        ) : (
+          <p className="text-[0.875rem]">Seleziona le opzioni per vedere la disponibilità</p>
+        )
       )}
       <div className="flex flex-wrap items-center space-x-5 text-[2.5rem] leading-none font-sans font-light mt-3">
         <button

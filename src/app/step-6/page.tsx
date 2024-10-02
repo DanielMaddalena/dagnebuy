@@ -2,10 +2,12 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import useSwell from '@/contexts/useSwell';
+import CounterComponent from '../components/CounterComponent';
 
 export default function Page() {
-  const { getCart, removeProduct } = useSwell();
+  const { getCart, removeProduct , updateProduct} = useSwell();
   const [cart, setCart] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [loadingItems, setLoadingItems] = useState([]);
 
   useEffect(() => {
@@ -13,14 +15,34 @@ export default function Page() {
       try {
         const cartData = await getCart();
         console.log('Dati del carrello:', cartData);
-        setCart(cartData);
+  
+        // Controlla se la quantità di ciascun articolo supera il livello di stock
+        const itemsToUpdate = cartData.items.filter(item => item.quantity > item.variant.stock_level);
+  
+        if (itemsToUpdate.length > 0) {
+          // Aggiorna le quantità degli articoli che superano il livello di stock
+          await Promise.all(itemsToUpdate.map(async (item) => {
+            // Se lo stock è zero o negativo, rimuovi l'articolo dal carrello
+            if (item.variant.stock_level <= 0) {
+              await removeProduct(item.id);
+            } else {
+              await updateProduct(item.id, item.variant.stock_level);
+            }
+          }));
+  
+          // Recupera nuovamente il carrello aggiornato
+          const updatedCart = await getCart();
+          setCart(updatedCart);
+        } else {
+          setCart(cartData);
+        }
       } catch (error) {
         console.error('Errore nel recupero del carrello:', error);
       }
     };
-
+  
     fetchCart();
-  }, [getCart]);
+  }, [getCart, updateProduct, removeProduct]);
 
   // Funzione per gestire la rimozione dell'articolo
   const handleRemoveItem = useCallback(
@@ -60,27 +82,28 @@ export default function Page() {
             <h5 className="text-[1.75rem] font-sans font-medium text-black leading-none mt-2">
               €{item.price_total.toFixed(2)}
             </h5>
-            <CounterComponent stockLevel={stockLevel} quantity={quantity} setQuantity={setQuantity} />
           </div>
-          
         </div>
-        {loadingItems.includes(item.id) ? (
-          <div className="ml-auto flex items-center">
-            <img
-              className="h-12 w-auto object-contain"
-              src="/images/loading.svg"
-              alt="Caricamento"
-            />
-          </div>
-        ) : (
-          <button className="ml-auto" onClick={() => handleRemoveItem(item.id)}>
-            <img
-              className="h-12 w-auto object-contain"
-              src="/images/delete.svg"
-              alt="Elimina"
-            />
-          </button>
-        )}
+        <div className="ml-auto flex flex-col justify-between">
+          {loadingItems.includes(item.id) ? (
+            <div className="ml-auto flex items-center">
+              <img
+                className="h-12 w-auto object-contain"
+                src="/images/loading.svg"
+                alt="Caricamento"
+              />
+            </div>
+          ) : (
+            <button className="ml-auto" onClick={() => handleRemoveItem(item.id)}>
+              <img
+                className="h-12 w-auto object-contain"
+                src="/images/delete.svg"
+                alt="Elimina"
+              />
+            </button>
+          )}
+          <CounterComponent stockLevel={item.variant.stock_level} quantity={quantity} setQuantity={setQuantity} showAvailability={false}/>
+        </div>
       </div>
     ))}
       </div>
