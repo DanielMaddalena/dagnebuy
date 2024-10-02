@@ -1,6 +1,13 @@
-import React from 'react'
+'use client'
+
+import useSwell from '@/contexts/useSwell';
+import React, { useEffect} from 'react';
 
 export default function page() {
+  const { setCurrent } = useSwell();
+  useEffect(() => {
+    setCurrent();
+  }, []);
   return (
     <div className='w-full h-screen flex flex-col space-y-6 items-center justify-center'>
         <h1 className='uppercase text-[4.5rem] font-sans font-light text-black text-center'>Touch the screen to start buying</h1>

@@ -56,7 +56,29 @@ const useSwell = () => {
     }
   }, []);
 
+  //funzione rimuovere un articolo in base all'id dal carrello
+  const removeProduct = useCallback(async (itemId: string) => {
+    try {
+      const cart = await swell.cart.removeItem(itemId);
+      return cart;
+    } catch (error) {
+      console.error('Errore nel rimuovere il prodotto:', error);
+      throw error;
+    }
+  }, []);
+
+  // const removeProduct = useCallback(async (item_id: string) => {
+  //   return swell.cart.removeItem(item_id)
+  // }, [])
+
+  const setCurrent = useCallback(async () => {
+    return swell.currency.set('EUR');
+  }, []);
+  
+
   return {
+    removeProduct,
+    setCurrent,
     getProduct,
     getProducts,
     getCart, // Aggiunta della funzione getCart

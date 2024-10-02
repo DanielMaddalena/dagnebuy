@@ -15,6 +15,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   const [stockLevel, setStockLevel] = useState(null);
   const [isBuyButtonDisabled, setIsBuyButtonDisabled] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [loadingItems, setLoadingItems] = useState([]);
 
   const getSelectedVariant = useCallback(() => {
     if (Object.keys(selectedOptions).length !== product.options.length) {
@@ -92,15 +93,8 @@ export default function ProductDetail({ product }: { product: Product }) {
     }));
   };
 
-  const handleViewCart = async () => {
-    try {
-      const cart = await getCart();
-    } catch (error) {
-      console.error('Errore nel recupero del carrello:', error);
-    }
-  };
-  
   const handleAddVariant = async () => {
+    setLoadingItems((prev) => [...prev, product.id]);
     try {
       const selectedVariant = getSelectedVariant();
       if (!selectedVariant) {
@@ -117,6 +111,8 @@ export default function ProductDetail({ product }: { product: Product }) {
       console.log('Carrello:', cart);
     } catch (error) {
       console.error('Errore nell\'aggiunta della variante al carrello:', error);
+    } finally {
+      setLoadingItems((prev) => prev.filter((id) => id !== product.id));
     }
   };
   
@@ -137,18 +133,32 @@ export default function ProductDetail({ product }: { product: Product }) {
             )}
             <h5 className='text-[3.125rem] text-center font-sans font-medium text-black leading-none mt-2'>{product.price}</h5>
             <button
-              className={`mt-16 text-center text-white uppercase leading-none rounded-[0.25rem] bg-violet-100 text-[3.625rem] font-light font-sans py-4 px-6 min-w-[15.875rem] ${isBuyButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`mt-16 text-center inline-flex items-center justify-center text-white uppercase leading-none rounded-[0.25rem] bg-violet-100 text-[3.625rem] font-light font-sans py-4 px-6 min-w-[15.875rem] ${isBuyButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={(e) => { 
                 e.preventDefault(); 
                 if (!isBuyButtonDisabled) {
                   handleAddVariant();
-                  window.location.href = `/step-5/${product.id}`;  // Cambia pagina
+                  setTimeout(() => {
+                    window.location.href = `/step-5/${product.id}`;
+                  }, 3000);
                 }
               }}
               disabled={isBuyButtonDisabled}
 
             >
-              Buy
+              {loadingItems.includes(product.id) ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <img
+                      className="h-12 w-auto object-contain"
+                      src="/images/loading.svg"
+                      alt="Caricamento"
+                    />
+                  </div>
+                ) : (
+                  <span>
+                    Buy
+                  </span>
+                )}
             </button>
 
             <Link href={`/step-3`} className="inline-flex items-center mt-16 leading-none text-[1.875rem] font-light font-sans">
@@ -156,8 +166,7 @@ export default function ProductDetail({ product }: { product: Product }) {
                 className="h-10 mr-3 rotate-90 w-auto object-contain"
                 src="/images/double-arrows-down.svg"
                 alt="search"
-                />
-                <span onClick={handleViewCart}>Back to catalogue</span>
+                />Back to catalogue
             </Link>
         </div>
         <div className="flex flex-col !overflow-x-visible">
